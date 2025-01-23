@@ -1,4 +1,4 @@
-module github.com/rwestlund/quickbooks-go
+module github.com/divit-stem/quickbooks-go
 
 go 1.20
 
