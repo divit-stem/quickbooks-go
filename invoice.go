@@ -155,6 +155,41 @@ func (c *Client) DeleteInvoice(invoice *Invoice) error {
 	return c.post("invoice", invoice, nil, map[string]string{"operation": "delete"})
 }
 
+func (c *Client) FetchInvoices(pageIndex, pageSize int) ([]Invoice, int, error) {
+	var resp struct {
+		QueryResponse struct {
+			Invoices      []Invoice `json:"Invoice"`
+			MaxResults    int
+			StartPosition int
+			TotalCount    int
+		}
+	}
+	if pageSize == 0 {
+		pageSize = 20 // default page size
+	}
+
+	if err := c.query("SELECT COUNT(*) FROM Invoice", &resp); err != nil {
+		return nil, 0, err
+	}
+
+	if resp.QueryResponse.TotalCount == 0 || pageSize*(pageIndex+1) > resp.QueryResponse.TotalCount {
+		return nil, 0, errors.New("no invoices could be found")
+	}
+
+	invoices := make([]Invoice, 0, pageSize)
+	query := "SELECT * FROM Invoice ORDERBY Id DESC STARTPOSITION " + strconv.Itoa((pageIndex*pageSize)+1) + " MAXRESULTS " + strconv.Itoa(pageSize)
+
+	if err := c.query(query, &resp); err != nil {
+		return nil, 0, err
+	}
+
+	if resp.QueryResponse.Invoices == nil {
+		return nil, 0, errors.New("no invoices could be found")
+	}
+
+	return invoices, resp.QueryResponse.TotalCount, nil
+}
+
 // FindInvoices gets the full list of Invoices in the QuickBooks account.
 func (c *Client) FindInvoices() ([]Invoice, error) {
 	var resp struct {
