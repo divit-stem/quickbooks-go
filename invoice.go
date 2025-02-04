@@ -164,6 +164,7 @@ func (c *Client) FetchInvoices(pageIndex, pageSize int) ([]Invoice, int, error) 
 			TotalCount    int
 		}
 	}
+	var totalCount int
 	if pageSize == 0 {
 		pageSize = 20 // default page size
 	}
@@ -175,6 +176,7 @@ func (c *Client) FetchInvoices(pageIndex, pageSize int) ([]Invoice, int, error) 
 	if resp.QueryResponse.TotalCount == 0 || pageSize*(pageIndex+1) > resp.QueryResponse.TotalCount {
 		return nil, 0, errors.New("no invoices could be found")
 	}
+	totalCount = resp.QueryResponse.TotalCount
 
 	invoices := make([]Invoice, 0, pageSize)
 	query := "SELECT * FROM Invoice ORDERBY Id DESC STARTPOSITION " + strconv.Itoa((pageIndex*pageSize)+1) + " MAXRESULTS " + strconv.Itoa(pageSize)
@@ -188,7 +190,7 @@ func (c *Client) FetchInvoices(pageIndex, pageSize int) ([]Invoice, int, error) 
 	}
 	invoices = append(invoices, resp.QueryResponse.Invoices...)
 
-	return invoices, resp.QueryResponse.TotalCount, nil
+	return invoices, totalCount, nil
 }
 
 // FindInvoices gets the full list of Invoices in the QuickBooks account.
