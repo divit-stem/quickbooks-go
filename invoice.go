@@ -186,6 +186,7 @@ func (c *Client) FetchInvoices(pageIndex, pageSize int) ([]Invoice, int, error) 
 	if resp.QueryResponse.Invoices == nil {
 		return nil, 0, errors.New("no invoices could be found")
 	}
+	invoices = append(invoices, resp.QueryResponse.Invoices...)
 
 	return invoices, resp.QueryResponse.TotalCount, nil
 }
