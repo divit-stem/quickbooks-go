@@ -176,13 +176,14 @@ func (c *Client) FetchInvoices(pageIndex, pageSize int, whereClause string) ([]I
 	if err := c.query("SELECT COUNT(*) FROM Invoice "+whereClause, &resp); err != nil {
 		return nil, 0, err
 	}
-
-	if resp.QueryResponse.TotalCount == 0 || pageSize*(pageIndex+1) > resp.QueryResponse.TotalCount {
-		return nil, 0, errors.New("no invoices could be found")
-	}
-
 	totalCount := resp.QueryResponse.TotalCount
 	invoices := make([]Invoice, 0, pageSize)
+
+	// pageSize * pageIndex = offset cannot greater than total count
+	if resp.QueryResponse.TotalCount == 0 || pageSize*(pageIndex) > resp.QueryResponse.TotalCount {
+		return invoices, totalCount, nil
+	}
+
 	query := "SELECT * FROM Invoice " + whereClause + " STARTPOSITION " + strconv.Itoa((pageIndex*pageSize)+1) + " MAXRESULTS " + strconv.Itoa(pageSize)
 
 	if err := c.query(query, &resp); err != nil {
@@ -190,7 +191,7 @@ func (c *Client) FetchInvoices(pageIndex, pageSize int, whereClause string) ([]I
 	}
 
 	if resp.QueryResponse.Invoices == nil {
-		return nil, 0, errors.New("no invoices could be found")
+		return invoices, 0, nil
 	}
 	invoices = append(invoices, resp.QueryResponse.Invoices...)
 
