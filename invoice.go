@@ -6,7 +6,9 @@ package quickbooks
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strconv"
+	"strings"
 )
 
 // Invoice represents a QuickBooks Invoice object.
@@ -155,7 +157,7 @@ func (c *Client) DeleteInvoice(invoice *Invoice) error {
 	return c.post("invoice", invoice, nil, map[string]string{"operation": "delete"})
 }
 
-func (c *Client) FetchInvoices(pageIndex, pageSize int) ([]Invoice, int, error) {
+func (c *Client) FetchInvoices(pageIndex, pageSize int, whereClause string) ([]Invoice, int, error) {
 	var resp struct {
 		QueryResponse struct {
 			Invoices      []Invoice `json:"Invoice"`
@@ -164,22 +166,24 @@ func (c *Client) FetchInvoices(pageIndex, pageSize int) ([]Invoice, int, error) 
 			TotalCount    int
 		}
 	}
-	var totalCount int
 	if pageSize == 0 {
 		pageSize = 20 // default page size
 	}
+	if whereClause != "" && !strings.HasPrefix(whereClause, "WHERE") {
+		whereClause = fmt.Sprintf("WHERE %s", whereClause)
+	}
 
-	if err := c.query("SELECT COUNT(*) FROM Invoice", &resp); err != nil {
+	if err := c.query("SELECT COUNT(*) FROM Invoice "+whereClause, &resp); err != nil {
 		return nil, 0, err
 	}
 
 	if resp.QueryResponse.TotalCount == 0 || pageSize*(pageIndex+1) > resp.QueryResponse.TotalCount {
 		return nil, 0, errors.New("no invoices could be found")
 	}
-	totalCount = resp.QueryResponse.TotalCount
 
+	totalCount := resp.QueryResponse.TotalCount
 	invoices := make([]Invoice, 0, pageSize)
-	query := "SELECT * FROM Invoice ORDERBY Id DESC STARTPOSITION " + strconv.Itoa((pageIndex*pageSize)+1) + " MAXRESULTS " + strconv.Itoa(pageSize)
+	query := "SELECT * FROM Invoice " + whereClause + " STARTPOSITION " + strconv.Itoa((pageIndex*pageSize)+1) + " MAXRESULTS " + strconv.Itoa(pageSize)
 
 	if err := c.query(query, &resp); err != nil {
 		return nil, 0, err
