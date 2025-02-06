@@ -107,3 +107,8 @@ type TelephoneNumber struct {
 type WebSiteAddress struct {
 	URI string `json:",omitempty"`
 }
+
+type MessagesPref struct {
+	Message string `json:"message"`
+	Subject string `json:"subject"`
+}
