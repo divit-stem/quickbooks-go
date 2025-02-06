@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"time"
@@ -99,7 +100,7 @@ func (c *Client) FindAuthorizationUrl(scope string, state string, redirectUri st
 	return authorizationUrl.String(), nil
 }
 
-func (c *Client) req(method string, endpoint string, payloadData interface{}, responseObject interface{}, queryParameters map[string]string) error {
+func (c *Client) req(method string, endpoint string, payloadData interface{}, responseObject interface{}, queryParameters map[string]string, acceptContentType string) error {
 	// TODO: possibly just wait until c.throttled is false, and continue the request?
 	if c.throttled {
 		return errors.New("waiting for rate limit")
@@ -133,8 +134,10 @@ func (c *Client) req(method string, endpoint string, payloadData interface{}, re
 	if err != nil {
 		return fmt.Errorf("failed to create request: %v", err)
 	}
-
-	req.Header.Add("Accept", "application/json")
+	if acceptContentType == "" {
+		acceptContentType = "application/json"
+	}
+	req.Header.Add("Accept", acceptContentType)
 	req.Header.Add("Content-Type", "application/json")
 
 	resp, err := c.Client.Do(req)
@@ -158,20 +161,32 @@ func (c *Client) req(method string, endpoint string, payloadData interface{}, re
 	}
 
 	if responseObject != nil {
-		if err = json.NewDecoder(resp.Body).Decode(&responseObject); err != nil {
-			return fmt.Errorf("failed to unmarshal response into object: %v", err)
+		switch acceptContentType {
+		case "application/json":
+			if err = json.NewDecoder(resp.Body).Decode(&responseObject); err != nil {
+				return fmt.Errorf("failed to unmarshal response into object: %v", err)
+			}
+		case "application/pdf":
+			responseObject, err = io.ReadAll(resp.Body)
+			if err != nil {
+				return fmt.Errorf("failed to read response body: %v", err)
+			}
 		}
 	}
 
 	return nil
 }
 
+func (c *Client) getPDF(endpoint string, responseObject interface{}, queryParameters map[string]string) error {
+	return c.req("GET", endpoint, nil, responseObject, queryParameters, "application/pdf")
+}
+
 func (c *Client) get(endpoint string, responseObject interface{}, queryParameters map[string]string) error {
-	return c.req("GET", endpoint, nil, responseObject, queryParameters)
+	return c.req("GET", endpoint, nil, responseObject, queryParameters, "")
 }
 
 func (c *Client) post(endpoint string, payloadData interface{}, responseObject interface{}, queryParameters map[string]string) error {
-	return c.req("POST", endpoint, payloadData, responseObject, queryParameters)
+	return c.req("POST", endpoint, payloadData, responseObject, queryParameters, "")
 }
 
 // query makes the specified QBO `query` and unmarshals the result into `responseObject`

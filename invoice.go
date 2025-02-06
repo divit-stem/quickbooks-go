@@ -250,6 +250,15 @@ func (c *Client) FindInvoiceById(id string) (*Invoice, error) {
 	return &resp.Invoice, nil
 }
 
+// FindInvoicePDFById download the invoice PDF by the given id
+func (c *Client) FindInvoicePDFById(id string) ([]byte, error) {
+	var resp = make([]byte, 0)
+	if err := c.getPDF("invoice/"+id+"/pdf", &resp, nil); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
 // QueryInvoices accepts an SQL query and returns all invoices found using it
 func (c *Client) QueryInvoices(query string) ([]Invoice, error) {
 	var resp struct {
