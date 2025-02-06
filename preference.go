@@ -6,7 +6,7 @@ type Preferences struct {
 	}
 	CurrencyPrefs struct {
 		HomeCurrency struct {
-			Value string
+			Value string `json:"value"`
 		}
 		MultiCurrencyEnabled bool
 	}
@@ -15,13 +15,11 @@ type Preferences struct {
 // FindPreferences returns the QuickBooks Preferences object.
 func (c *Client) FindPreferences() (*Preferences, error) {
 	var resp struct {
-		PreferenceInfo Preferences
-		Time           Date
+		Preferences Preferences
+		Time        Date
 	}
-
 	if err := c.get("preferences", &resp, nil); err != nil {
 		return nil, err
 	}
-
-	return &resp.PreferenceInfo, nil
+	return &resp.Preferences, nil
 }

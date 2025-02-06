@@ -109,6 +109,6 @@ type WebSiteAddress struct {
 }
 
 type MessagesPref struct {
-	Message string `json:"message"`
-	Subject string `json:"subject"`
+	Message string
+	Subject string
 }
