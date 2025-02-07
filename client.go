@@ -11,6 +11,8 @@ import (
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/jinzhu/copier"
 )
 
 // Client is your handle to the QuickBooks API.
@@ -167,10 +169,11 @@ func (c *Client) req(method string, endpoint string, payloadData interface{}, re
 				return fmt.Errorf("failed to unmarshal response into object: %v", err)
 			}
 		case "application/pdf":
-			responseObject, err = io.ReadAll(resp.Body)
+			result, err := io.ReadAll(resp.Body)
 			if err != nil {
 				return fmt.Errorf("failed to read response body: %v", err)
 			}
+			copier.Copy(responseObject, result)
 		}
 	}
 

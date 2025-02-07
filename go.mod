@@ -3,6 +3,7 @@ module github.com/divit-stem/quickbooks-go
 go 1.20
 
 require (
+	github.com/jinzhu/copier v0.4.0
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/oauth2 v0.19.0
 	gopkg.in/guregu/null.v4 v4.0.0
