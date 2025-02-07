@@ -256,7 +256,6 @@ func (c *Client) FindInvoicePDFById(id string) ([]byte, error) {
 	if err := c.getPDF("invoice/"+id+"/pdf", &resp, nil); err != nil {
 		return nil, err
 	}
-	fmt.Printf("outside %d\n", len(resp))
 	return resp, nil
 }
 
