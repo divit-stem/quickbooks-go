@@ -157,7 +157,7 @@ func (c *Client) DeleteInvoice(invoice *Invoice) error {
 	return c.post("invoice", invoice, nil, map[string]string{"operation": "delete"})
 }
 
-func (c *Client) FetchInvoices(pageIndex, pageSize int, whereClause string) ([]Invoice, int, error) {
+func (c *Client) FetchInvoices(pageIndex, pageSize int, whereClause, orderClause string) ([]Invoice, int, error) {
 	var resp struct {
 		QueryResponse struct {
 			Invoices      []Invoice `json:"Invoice"`
@@ -173,7 +173,7 @@ func (c *Client) FetchInvoices(pageIndex, pageSize int, whereClause string) ([]I
 		whereClause = fmt.Sprintf("WHERE %s", whereClause)
 	}
 
-	if err := c.query("SELECT COUNT(*) FROM Invoice "+whereClause, &resp); err != nil {
+	if err := c.query(fmt.Sprintf("SELECT COUNT(*) FROM Invoice %s %s", whereClause, orderClause), &resp); err != nil {
 		return nil, 0, err
 	}
 	totalCount := resp.QueryResponse.TotalCount
