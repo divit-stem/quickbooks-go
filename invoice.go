@@ -173,7 +173,7 @@ func (c *Client) FetchInvoices(pageIndex, pageSize int, whereClause, orderClause
 		whereClause = fmt.Sprintf("WHERE %s", whereClause)
 	}
 
-	if err := c.query(fmt.Sprintf("SELECT COUNT(*) FROM Invoice %s %s", whereClause, orderClause), &resp); err != nil {
+	if err := c.query(fmt.Sprintf("SELECT COUNT(*) FROM Invoice %s", whereClause), &resp); err != nil {
 		return nil, 0, err
 	}
 	totalCount := resp.QueryResponse.TotalCount
@@ -184,7 +184,7 @@ func (c *Client) FetchInvoices(pageIndex, pageSize int, whereClause, orderClause
 		return invoices, totalCount, nil
 	}
 
-	query := "SELECT * FROM Invoice " + whereClause + " STARTPOSITION " + strconv.Itoa((pageIndex*pageSize)+1) + " MAXRESULTS " + strconv.Itoa(pageSize)
+	query := "SELECT * FROM Invoice " + whereClause + " " + orderClause + " STARTPOSITION " + strconv.Itoa((pageIndex*pageSize)+1) + " MAXRESULTS " + strconv.Itoa(pageSize)
 
 	if err := c.query(query, &resp); err != nil {
 		return nil, 0, err
