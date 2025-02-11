@@ -4,6 +4,10 @@ type Preferences struct {
 	EmailMessagesPrefs struct {
 		InvoiceMessage MessagesPref
 	}
+	SalesFormsPrefs struct {
+		SalesEmailBcc EmailAddress
+		SalesEmailCc  EmailAddress
+	}
 	CurrencyPrefs struct {
 		HomeCurrency struct {
 			Value string `json:"value"`
