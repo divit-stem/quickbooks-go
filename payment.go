@@ -17,6 +17,7 @@ type Payment struct {
 	CustomerRef         ReferenceType `json:",omitempty"`
 	Id                  string        `json:",omitempty"`
 	MetaData            MetaData      `json:",omitempty"`
+	PaymentRefNum       string        `json:",omitempty"`
 	PaymentMethodRef    ReferenceType `json:",omitempty"`
 }
 
