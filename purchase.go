@@ -14,15 +14,15 @@ type Purchase struct {
 }
 
 type AccountBasedExpenseLine struct {
-	DetailType                    string //"AccountBasedExpenseLineDetail",
-	Amount                        float64
-	Id                            string
-	AccountBasedExpenseLineDetail AccountBasedExpense
-	Description                   string
+	DetailType                    string              //"AccountBasedExpenseLineDetail",
+	Amount                        float64             `json:",omitempty"`
+	Id                            string              `json:",omitempty"`
+	AccountBasedExpenseLineDetail AccountBasedExpense `json:",omitempty"`
+	Description                   string              `json:",omitempty"`
 }
 
 type AccountBasedExpense struct {
-	AccountRef ReferenceType
+	AccountRef ReferenceType `json:",omitempty"`
 }
 
 // CreatePurchase creates the given purchase within QuickBooks.
