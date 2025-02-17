@@ -61,8 +61,9 @@ type DeliveryInfo struct {
 }
 
 type LinkedTxn struct {
-	TxnID   string `json:"TxnId"`
-	TxnType string `json:"TxnType"`
+	TxnID     string `json:"TxnId"`
+	TxnType   string `json:"TxnType"`
+	TxnLineID string `json:"TxnLineId,omitempty"`
 }
 
 type TxnTaxDetail struct {
