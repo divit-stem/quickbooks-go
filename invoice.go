@@ -199,6 +199,21 @@ func (c *Client) FetchInvoices(pageIndex, pageSize int, whereClause, orderClause
 	return invoices, totalCount, nil
 }
 
+// GetInvoiceCount gets the count of a query
+func (c *Client) GetInvoiceCount(whereClause string) (int, error) {
+	var resp struct {
+		QueryResponse struct {
+			TotalCount int
+		}
+	}
+
+	if err := c.query(fmt.Sprintf("SELECT COUNT(*) FROM Invoice %s", whereClause), &resp); err != nil {
+		return 0, err
+	}
+	totalCount := resp.QueryResponse.TotalCount
+	return totalCount, nil
+}
+
 // FindInvoices gets the full list of Invoices in the QuickBooks account.
 func (c *Client) FindInvoices() ([]Invoice, error) {
 	var resp struct {
