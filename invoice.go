@@ -6,7 +6,9 @@ package quickbooks
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strconv"
+	"strings"
 )
 
 // Invoice represents a QuickBooks Invoice object.
@@ -59,8 +61,9 @@ type DeliveryInfo struct {
 }
 
 type LinkedTxn struct {
-	TxnID   string `json:"TxnId"`
-	TxnType string `json:"TxnType"`
+	TxnID     string `json:"TxnId"`
+	TxnType   string `json:"TxnType"`
+	TxnLineID string `json:"TxnLineId,omitempty"`
 }
 
 type TxnTaxDetail struct {
@@ -155,6 +158,62 @@ func (c *Client) DeleteInvoice(invoice *Invoice) error {
 	return c.post("invoice", invoice, nil, map[string]string{"operation": "delete"})
 }
 
+func (c *Client) FetchInvoices(pageIndex, pageSize int, whereClause, orderClause string) ([]Invoice, int, error) {
+	var resp struct {
+		QueryResponse struct {
+			Invoices      []Invoice `json:"Invoice"`
+			MaxResults    int
+			StartPosition int
+			TotalCount    int
+		}
+	}
+	if pageSize == 0 {
+		pageSize = 20 // default page size
+	}
+	if whereClause != "" && !strings.HasPrefix(whereClause, "WHERE") {
+		whereClause = fmt.Sprintf("WHERE %s", whereClause)
+	}
+
+	if err := c.query(fmt.Sprintf("SELECT COUNT(*) FROM Invoice %s", whereClause), &resp); err != nil {
+		return nil, 0, err
+	}
+	totalCount := resp.QueryResponse.TotalCount
+	invoices := make([]Invoice, 0, pageSize)
+
+	// pageSize * pageIndex = offset cannot greater than total count
+	if resp.QueryResponse.TotalCount == 0 || pageSize*(pageIndex) > resp.QueryResponse.TotalCount {
+		return invoices, totalCount, nil
+	}
+
+	query := "SELECT * FROM Invoice " + whereClause + " " + orderClause + " STARTPOSITION " + strconv.Itoa((pageIndex*pageSize)+1) + " MAXRESULTS " + strconv.Itoa(pageSize)
+
+	if err := c.query(query, &resp); err != nil {
+		return nil, 0, err
+	}
+
+	if resp.QueryResponse.Invoices == nil {
+		return invoices, 0, nil
+	}
+	invoices = append(invoices, resp.QueryResponse.Invoices...)
+
+	return invoices, totalCount, nil
+}
+
+// GetInvoiceCount gets the count of a query
+func (c *Client) GetInvoiceCount(whereClause string) (int, error) {
+	var resp struct {
+		QueryResponse struct {
+			TotalCount int
+		}
+	}
+
+	if err := c.query(fmt.Sprintf("SELECT COUNT(*) FROM Invoice %s", whereClause), &resp); err != nil {
+		return 0, err
+	}
+	totalCount := resp.QueryResponse.TotalCount
+	return totalCount, nil
+}
+
 // FindInvoices gets the full list of Invoices in the QuickBooks account.
 func (c *Client) FindInvoices() ([]Invoice, error) {
 	var resp struct {
@@ -205,6 +264,15 @@ func (c *Client) FindInvoiceById(id string) (*Invoice, error) {
 	}
 
 	return &resp.Invoice, nil
+}
+
+// FindInvoicePDFById download the invoice PDF by the given id
+func (c *Client) FindInvoicePDFById(id string) ([]byte, error) {
+	var resp = make([]byte, 0)
+	if err := c.getPDF("invoice/"+id+"/pdf", &resp, nil); err != nil {
+		return nil, err
+	}
+	return resp, nil
 }
 
 // QueryInvoices accepts an SQL query and returns all invoices found using it
