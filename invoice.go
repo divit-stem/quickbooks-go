@@ -53,6 +53,7 @@ type Invoice struct {
 	AllowOnlineACHPayment        bool          `json:",omitempty"`
 	Deposit                      json.Number   `json:",omitempty"`
 	DepositToAccountRef          ReferenceType `json:",omitempty"`
+	InvoiceLink                  string        `json:",omitempty"`
 }
 
 type DeliveryInfo struct {
