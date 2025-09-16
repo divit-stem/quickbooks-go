@@ -253,13 +253,13 @@ func (c *Client) FindInvoices() ([]Invoice, error) {
 }
 
 // FindInvoiceById finds the invoice by the given id
-func (c *Client) FindInvoiceById(id string) (*Invoice, error) {
+func (c *Client) FindInvoiceById(id string, queryParams map[string]string) (*Invoice, error) {
 	var resp struct {
 		Invoice Invoice
 		Time    Date
 	}
 
-	if err := c.get("invoice/"+id, &resp, nil); err != nil {
+	if err := c.get("invoice/"+id, &resp, queryParams); err != nil {
 		return nil, err
 	}
 
@@ -313,7 +313,7 @@ func (c *Client) UpdateInvoice(invoice *Invoice) (*Invoice, error) {
 		return nil, errors.New("missing invoice id")
 	}
 
-	existingInvoice, err := c.FindInvoiceById(invoice.Id)
+	existingInvoice, err := c.FindInvoiceById(invoice.Id, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -345,7 +345,7 @@ func (c *Client) VoidInvoice(invoice Invoice) error {
 		return errors.New("missing invoice id")
 	}
 
-	existingInvoice, err := c.FindInvoiceById(invoice.Id)
+	existingInvoice, err := c.FindInvoiceById(invoice.Id, nil)
 	if err != nil {
 		return err
 	}
