@@ -1,5 +1,7 @@
 package quickbooks
 
+import "errors"
+
 type Transfer struct {
 	SyncToken      string        `json:",omitempty"`
 	Domain         string        `json:"domain,omitempty"`
@@ -24,4 +26,25 @@ func (c *Client) CreateTransfer(transfer *Transfer) (*Transfer, error) {
 	}
 
 	return &resp.Transfer, nil
+}
+
+// QueryTransfer accepts a SQL query and returns all payments found using it.
+func (c *Client) QueryTransfer(query string) ([]Transfer, error) {
+	var resp struct {
+		QueryResponse struct {
+			Transfers     []Transfer `json:"Transfer"`
+			StartPosition int
+			MaxResults    int
+		}
+	}
+
+	if err := c.query(query, &resp); err != nil {
+		return nil, err
+	}
+
+	if resp.QueryResponse.Transfers == nil {
+		return nil, errors.New("could not find any transfer record")
+	}
+
+	return resp.QueryResponse.Transfers, nil
 }
