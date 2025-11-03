@@ -19,6 +19,7 @@ type Payment struct {
 	MetaData            MetaData      `json:",omitempty"`
 	PaymentRefNum       string        `json:",omitempty"`
 	PaymentMethodRef    ReferenceType `json:",omitempty"`
+	PrivateNote         string        `json:",omitempty"`
 }
 
 type PaymentLine struct {
